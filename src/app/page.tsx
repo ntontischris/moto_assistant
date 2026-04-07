@@ -1,9 +1,14 @@
-export default function HomePage() {
+import { Hero } from "@/components/landing/hero";
+import { ModeSelector } from "@/components/landing/mode-selector";
+
+export default function LandingPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold" style={{ color: "var(--red)" }}>
-        Moto Assistant
-      </h1>
-    </main>
+    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+      <Hero />
+      <ModeSelector />
+      <p className="mt-12 text-xs text-[var(--gray-500)]">
+        ΕΜΠΙΣΤΕΥΤΙΚΟ — MotoMarket © 2026
+      </p>
+    </div>
   );
 }
