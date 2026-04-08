@@ -54,13 +54,13 @@ async function main(): Promise<void> {
         language: "el",
         prompt: {
           prompt: discoveryPrompt,
-          llm: "gpt-4o",
+          llm: "gpt-4o" as const,
           temperature: 0.4,
         },
       },
       tts: {
         voiceId: "SJHAKDu69tg6hbUdVyoe",
-        modelId: "eleven_flash_v2_5",
+        modelId: "eleven_flash_v2_5" as const,
       },
     },
   };

@@ -2,12 +2,9 @@
 
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-import {
-  QUESTIONNAIRE_SECTIONS,
-  TOTAL_SECTIONS,
-} from "@/lib/constants/questionnaire";
+import { TOTAL_SECTIONS } from "@/lib/constants/questionnaire";
 import type { AssistantSession } from "@/types/database";
 
 import { LiveTranscript, type TranscriptEntry } from "./live-transcript";
@@ -39,6 +36,8 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
   const [currentSection, setCurrentSection] = useState(
     session.progress_section || 1,
   );
+  const [hasStarted, setHasStarted] = useState(false);
+  const isEndingRef = useRef(false);
 
   const conversation = useConversation({
     onMessage: (message) => {
@@ -63,7 +62,9 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
       console.error("ElevenLabs conversation error:", error);
     },
     onDisconnect: () => {
-      router.push(`/session/${session.id}/complete`);
+      if (isEndingRef.current) {
+        router.push(`/session/${session.id}/complete`);
+      }
     },
     clientTools: {
       update_progress: async (params: { section_number?: number }) => {
@@ -85,10 +86,7 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
       }
       const { signedUrl } = await response.json();
 
-      const sectionName =
-        QUESTIONNAIRE_SECTIONS.find((s) => s.number === currentSection)?.name ??
-        "";
-
+      setHasStarted(true);
       await conversation.startSession({
         signedUrl,
         dynamicVariables: {
@@ -99,8 +97,9 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
       });
     } catch (err) {
       console.error("Failed to start conversation:", err);
+      setHasStarted(false);
     }
-  }, [conversation, session, currentSection, dynamicVariables]);
+  }, [conversation, session, dynamicVariables]);
 
   const handleToggleMute = useCallback(() => {
     setIsMuted((prev) => {
@@ -115,6 +114,7 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
   }, [conversation]);
 
   const handlePause = useCallback(async () => {
+    isEndingRef.current = true;
     try {
       await fetch("/api/agent/pause-session", {
         method: "POST",
@@ -128,6 +128,7 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
   }, [conversation, session.id]);
 
   const handleEnd = useCallback(async () => {
+    isEndingRef.current = true;
     await conversation.endSession();
   }, [conversation]);
 
