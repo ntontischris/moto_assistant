@@ -31,9 +31,9 @@ const discoveryPrompt = `\u0395\u03af\u03c3\u03b1\u03b9 \u03bf \u03c8\u03b7\u03c
 10. \u0391\u03bd \u03b4\u03b5\u03bd \u03be\u03ad\u03c1\u03b5\u03b9\u03c2 \u03ba\u03ac\u03c4\u03b9, \u03c0\u03b5\u03c2 "\u0398\u03b1 \u03c4\u03bf \u03ba\u03b1\u03c4\u03b1\u03b3\u03c1\u03ac\u03c8\u03c9" \u03ba\u03b1\u03b9 \u03ba\u03ac\u03bb\u03b5\u03c3\u03b5 log_unanswered
 11. \u0391\u03bd \u03b8\u03ad\u03bb\u03b5\u03b9 \u03bd\u03b1 \u03c3\u03c4\u03b1\u03bc\u03b1\u03c4\u03ae\u03c3\u03b5\u03b9, \u03ba\u03ac\u03bb\u03b5\u03c3\u03b5 pause_session
 
+ΠΕΛΑΤΗΣ: MotoMarket — εταιρεία εξοπλισμού μοτοσυκλέτας. B2B, B2C, φυσικά καταστήματα, εισαγωγές, εξαγωγές. Τρέχει Entersoft ERP + WMS που θέλει να αντικαταστήσει.
+
 Session ID: {{session_id}}
-Client Name: {{client_name}}
-Mode: {{mode}}
 Is Resumed: {{is_resumed}}
 Previous Context: {{previous_context}}
 Next Section: {{next_section}}
@@ -42,15 +42,15 @@ Next Section Name: {{next_section_name}}
 QUESTIONNAIRE:
 ${questionnaireText}`;
 
-async function main(): Promise<void> {
-  console.log("Creating Moto Assistant agent...");
+const AGENT_ID = process.env.ELEVENLABS_AGENT_ID;
 
-  const agent = await client.conversationalAi.agents.create({
+async function main(): Promise<void> {
+  const agentConfig = {
     name: "Moto Assistant",
     conversationConfig: {
       agent: {
         firstMessage:
-          "\u039a\u03b1\u03bb\u03b7\u03bc\u03ad\u03c1\u03b1! \u0395\u03af\u03bc\u03b1\u03b9 \u03bf \u03c8\u03b7\u03c6\u03b9\u03b1\u03ba\u03cc\u03c2 \u03b2\u03bf\u03b7\u03b8\u03cc\u03c2 \u03c4\u03bf\u03c5 MotoMarket. \u0395\u03af\u03bc\u03b1\u03b9 \u03b5\u03b4\u03ce \u03b3\u03b9\u03b1 \u03bd\u03b1 \u03ba\u03b1\u03c4\u03b1\u03bd\u03bf\u03ae\u03c3\u03c9 \u03c4\u03b9\u03c2 \u03b1\u03bd\u03ac\u03b3\u03ba\u03b5\u03c2 \u03c3\u03b1\u03c2. \u039c\u03c0\u03bf\u03c1\u03bf\u03cd\u03bc\u03b5 \u03bd\u03b1 \u03be\u03b5\u03ba\u03b9\u03bd\u03ae\u03c3\u03bf\u03c5\u03bc\u03b5;",
+          "Καλημέρα! Είμαι ο ψηφιακός βοηθός του MotoMarket. Είμαι εδώ για να κατανοήσω τις ανάγκες σας. Μπορούμε να ξεκινήσουμε;",
         language: "el",
         prompt: {
           prompt: discoveryPrompt,
@@ -59,24 +59,25 @@ async function main(): Promise<void> {
         },
       },
       tts: {
-        voiceId: "XrExE9yKIg1WjnnlVkGX", // Greek voice (verify in ElevenLabs dashboard)
-        modelId: "eleven_flash_v2_5", // Required for non-English languages
+        voiceId: "XrExE9yKIg1WjnnlVkGX",
+        modelId: "eleven_flash_v2_5",
       },
     },
-  });
+  };
 
-  console.log("Agent created successfully!");
-  console.log("Agent ID:", agent.agentId);
-  console.log("");
-  console.log("Add this to your .env.local:");
-  console.log(`ELEVENLABS_AGENT_ID=${agent.agentId}`);
-  console.log("");
-  console.log("Next steps:");
-  console.log("1. Go to ElevenLabs dashboard -> Agents -> Moto Assistant");
-  console.log(
-    "2. Configure server tools pointing to your deployed webhook URLs",
-  );
-  console.log("3. Set up post-call webhook for transcription");
+  if (AGENT_ID) {
+    console.log(`Updating existing agent: ${AGENT_ID}...`);
+    await client.conversationalAi.agents.update(AGENT_ID, agentConfig);
+    console.log("Agent updated successfully!");
+  } else {
+    console.log("Creating new Moto Assistant agent...");
+    const agent = await client.conversationalAi.agents.create(agentConfig);
+    console.log("Agent created successfully!");
+    console.log("Agent ID:", agent.agentId);
+    console.log("");
+    console.log("Add this to your .env.local:");
+    console.log(`ELEVENLABS_AGENT_ID=${agent.agentId}`);
+  }
 }
 
 main().catch(console.error);

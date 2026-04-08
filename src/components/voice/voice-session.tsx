@@ -93,10 +93,7 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
         signedUrl,
         dynamicVariables: {
           session_id: session.id,
-          client_name: session.client_name ?? "",
-          mode: session.mode,
-          current_section: String(currentSection),
-          current_section_name: sectionName,
+          is_resumed: "false",
           ...dynamicVariables,
         },
       });
