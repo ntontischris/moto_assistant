@@ -79,16 +79,17 @@ function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const response = await fetch("/api/signed-url");
-      if (!response.ok) {
-        console.error("Failed to fetch signed URL");
+      setHasStarted(true);
+      const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID;
+      if (!agentId) {
+        console.error("Missing NEXT_PUBLIC_ELEVENLABS_AGENT_ID");
+        setHasStarted(false);
         return;
       }
-      const { signedUrl } = await response.json();
 
-      setHasStarted(true);
       await conversation.startSession({
-        signedUrl,
+        agentId,
+        connectionType: "websocket",
         dynamicVariables: {
           session_id: session.id,
           is_resumed: "false",
