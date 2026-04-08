@@ -8,10 +8,10 @@ const client = new ElevenLabsClient({
   apiKey: process.env.ELEVENLABS_API_KEY!,
 });
 
-// Build questionnaire text for the system prompt
+// Build questionnaire text for the system prompt — include keys for save_answer tool
 const questionnaireText = QUESTIONNAIRE_SECTIONS.map(
   (s) =>
-    `## \u0395\u03bd\u03cc\u03c4\u03b7\u03c4\u03b1 ${s.number}: ${s.name}\n${s.questions.map((q) => `- ${q.label}${q.hint ? ` (${q.hint})` : ""}`).join("\n")}`,
+    `## Ενότητα ${s.number}: ${s.name}\n${s.questions.map((q) => `- key="${q.key}" | ${q.label}${q.hint ? ` (${q.hint})` : ""}`).join("\n")}`,
 ).join("\n\n");
 
 const discoveryPrompt = `\u0395\u03af\u03c3\u03b1\u03b9 \u03bf \u03c8\u03b7\u03c6\u03b9\u03b1\u03ba\u03cc\u03c2 \u03b2\u03bf\u03b7\u03b8\u03cc\u03c2 \u03c4\u03bf\u03c5 MotoMarket. \u039c\u03b9\u03bb\u03ac\u03c2 \u03b5\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac, \u03b5\u03af\u03c3\u03b1\u03b9 \u03b5\u03c0\u03b1\u03b3\u03b3\u03b5\u03bb\u03bc\u03b1\u03c4\u03b9\u03ba\u03cc\u03c2 \u03b1\u03bb\u03bb\u03ac \u03c6\u03b9\u03bb\u03b9\u03ba\u03cc\u03c2.
