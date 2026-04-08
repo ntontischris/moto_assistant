@@ -1,6 +1,8 @@
+import { config } from "dotenv";
+config({ path: ".env.local" });
+
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { QUESTIONNAIRE_SECTIONS } from "../src/lib/constants/questionnaire";
-import "dotenv/config";
 
 const client = new ElevenLabsClient({
   apiKey: process.env.ELEVENLABS_API_KEY!,
@@ -58,6 +60,7 @@ async function main(): Promise<void> {
       },
       tts: {
         voiceId: "XrExE9yKIg1WjnnlVkGX", // Greek voice (verify in ElevenLabs dashboard)
+        modelId: "eleven_flash_v2_5", // Required for non-English languages
       },
     },
   });
