@@ -1,7 +1,9 @@
 import type { ReactElement } from "react";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 interface SendEmailOptions {
   to: string;
@@ -14,6 +16,7 @@ export async function sendEmail({
   subject,
   react,
 }: SendEmailOptions): Promise<void> {
+  const resend = getResend();
   const { error } = await resend.emails.send({
     from: "Moto Assistant <noreply@motomarket.gr>",
     to,

@@ -6,7 +6,9 @@ import {
 } from "@/lib/constants/questionnaire";
 import type { SessionMode } from "@/types/database";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,6 +149,7 @@ export async function processTranscript(
   const systemPrompt =
     mode === "discovery" ? DISCOVERY_SYSTEM_PROMPT : SUPPORT_SYSTEM_PROMPT;
 
+  const openai = getOpenAI();
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.3,
