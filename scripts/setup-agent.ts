@@ -59,7 +59,7 @@ async function main(): Promise<void> {
         },
       },
       tts: {
-        voiceId: "XrExE9yKIg1WjnnlVkGX",
+        voiceId: "SJHAKDu69tg6hbUdVyoe",
         modelId: "eleven_flash_v2_5",
       },
     },
