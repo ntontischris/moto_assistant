@@ -1,6 +1,6 @@
 "use client";
 
-import { useConversation } from "@elevenlabs/react";
+import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
@@ -20,7 +20,15 @@ interface VoiceSessionProps {
   dynamicVariables?: Record<string, string>;
 }
 
-export function VoiceSession({ session, dynamicVariables }: VoiceSessionProps) {
+export function VoiceSession(props: VoiceSessionProps) {
+  return (
+    <ConversationProvider>
+      <VoiceSessionInner {...props} />
+    </ConversationProvider>
+  );
+}
+
+function VoiceSessionInner({ session, dynamicVariables }: VoiceSessionProps) {
   const router = useRouter();
 
   const [isMuted, setIsMuted] = useState(false);
