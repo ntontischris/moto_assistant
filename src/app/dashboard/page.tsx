@@ -1,20 +1,22 @@
 import { SessionsTable } from "@/components/dashboard/sessions-table";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { createClient } from "@/lib/supabase/server";
+import type { AssistantConversation, AssistantMission } from "@/types/database";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
   const [
-    sessionsResult,
+    conversationsResult,
     featureRequestsResult,
     unansweredResult,
     activeResult,
+    missionResult,
   ] = await Promise.all([
     supabase
-      .from("assistant_sessions")
+      .from("assistant_conversations")
       .select(
-        "id, client_name, client_email, client_company, mode, status, progress_section, progress_total, elevenlabs_conversation_id, resume_token, context_snapshot, created_at, updated_at",
+        "id, mission_id, status, last_section, elevenlabs_conversation_id, context_snapshot, duration_seconds, sections_covered, created_at, updated_at",
       )
       .order("created_at", { ascending: false })
       .limit(50),
@@ -27,15 +29,25 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("status", "unanswered"),
     supabase
-      .from("assistant_sessions")
+      .from("assistant_conversations")
       .select("id", { count: "exact", head: true })
       .eq("status", "active"),
+    supabase
+      .from("assistant_mission")
+      .select(
+        "id, status, progress_percentage, total_answers, total_conversations, created_at, updated_at",
+      )
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
-  const sessions = sessionsResult.data ?? [];
+  const conversations = (conversationsResult.data ??
+    []) as AssistantConversation[];
   const featureRequestCount = featureRequestsResult.count ?? 0;
   const unansweredCount = unansweredResult.count ?? 0;
   const activeCount = activeResult.count ?? 0;
+  const mission = (missionResult.data ?? null) as AssistantMission | null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -44,13 +56,15 @@ export default async function DashboardPage() {
       </h1>
 
       <StatsCards
-        totalSessions={sessions.length}
+        totalSessions={conversations.length}
         openFeatureRequests={featureRequestCount}
         unansweredQuestions={unansweredCount}
         activeSessions={activeCount}
+        missionProgress={mission?.progress_percentage ?? null}
+        missionStatus={mission?.status ?? null}
       />
 
-      <SessionsTable sessions={sessions} />
+      <SessionsTable conversations={conversations} />
     </div>
   );
 }

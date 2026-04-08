@@ -7,10 +7,9 @@ import { processTranscript } from "@/lib/openai/post-processing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyElevenLabsWebhook } from "@/lib/webhooks/verify";
 import type {
-  AssistantFeatureRequestInsert,
-  AssistantIssueInsert,
-  AssistantTranscriptInsert,
-  SessionMode,
+  AssistantFeatureRequest,
+  AssistantIssue,
+  AssistantTranscript,
 } from "@/types/database";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@motomarket.gr";
@@ -55,7 +54,7 @@ export async function POST(request: Request) {
   try {
     // 3. Find session by elevenlabs_conversation_id
     const { data: session, error: sessionError } = await supabase
-      .from("assistant_sessions")
+      .from("assistant_conversations")
       .select("id, client_name, client_email, mode, status, resume_token")
       .eq("elevenlabs_conversation_id", conversationId)
       .single();
@@ -78,12 +77,12 @@ export async function POST(request: Request) {
     // 5. Run post-processing
     const result = await processTranscript(
       transcript,
-      session.mode as SessionMode,
+      "discovery" as const,
       existingAnswerKeys,
     );
 
     // 6. Save transcript
-    const transcriptRow: AssistantTranscriptInsert = {
+    const transcriptRow: Record<string, unknown> = {
       session_id: session.id,
       full_transcript: transcript,
       summary: result.summary,
@@ -100,7 +99,7 @@ export async function POST(request: Request) {
 
     // 7. Insert extracted feature requests and issues
     if (result.extractedFeatureRequests.length > 0) {
-      const featureRows: AssistantFeatureRequestInsert[] =
+      const featureRows: Record<string, unknown>[] =
         result.extractedFeatureRequests.map((fr) => ({
           session_id: session.id,
           description: fr.description,
@@ -120,7 +119,7 @@ export async function POST(request: Request) {
     }
 
     if (result.extractedIssues.length > 0) {
-      const issueRows: AssistantIssueInsert[] = result.extractedIssues.map(
+      const issueRows: Record<string, unknown>[] = result.extractedIssues.map(
         (issue) => ({
           session_id: session.id,
           description: issue.description,
@@ -144,7 +143,7 @@ export async function POST(request: Request) {
     const isComplete = result.gapAnalysis.completionPercentage === 100;
     if (isComplete) {
       const { error: updateError } = await supabase
-        .from("assistant_sessions")
+        .from("assistant_conversations")
         .update({ status: "completed" })
         .eq("id", session.id);
 
@@ -163,10 +162,10 @@ export async function POST(request: Request) {
     try {
       await sendEmail({
         to: ADMIN_EMAIL,
-        subject: `[Moto Assistant] ${session.mode === "discovery" ? "Discovery" : "Support"} call - ${session.client_name ?? "Unknown"}`,
+        subject: `[Moto Assistant] Discovery call`,
         react: AdminSummaryEmail({
-          clientName: session.client_name ?? "Unknown",
-          mode: session.mode as SessionMode,
+          clientName: "MotoMarket",
+          mode: "discovery" as const,
           progress: result.gapAnalysis.completionPercentage,
           summary: result.summary,
           featureRequestCount: result.extractedFeatureRequests.length,

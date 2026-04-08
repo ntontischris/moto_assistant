@@ -11,6 +11,7 @@ export async function POST(request: Request) {
 
   try {
     const body: PauseSessionPayload = await request.json();
+    const conversationId = body.conversation_id ?? body.session_id;
     const supabase = createAdminClient();
 
     const { error } = await supabase
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
         status: "paused",
         context_snapshot: body.context_snapshot,
       })
-      .eq("id", body.session_id);
+      .eq("id", conversationId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

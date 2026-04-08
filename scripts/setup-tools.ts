@@ -6,209 +6,153 @@ const AGENT_ID = process.env.ELEVENLABS_AGENT_ID!;
 const WEBHOOK_SECRET = process.env.ELEVENLABS_WEBHOOK_SECRET!;
 const BASE_URL = "https://moto-assistant.vercel.app";
 
-const tools = [
-  {
-    type: "webhook" as const,
-    name: "save_answer",
-    description:
-      "Call this EVERY TIME the client answers a question. Saves the answer to the database.",
-    webhook: {
-      url: `${BASE_URL}/api/agent/save-answer`,
-      method: "POST" as const,
-      request_headers: {
-        "x-webhook-secret": WEBHOOK_SECRET,
-        "Content-Type": "application/json",
-      },
-      request_body: {
-        type: "object" as const,
-        properties: {
-          session_id: {
-            type: "string",
-            description: "The session ID from dynamic variables",
-          },
-          section_number: {
-            type: "number",
-            description: "Section number 1-14",
-          },
-          section_name: {
-            type: "string",
-            description: "Greek name of the section",
-          },
-          question_key: {
-            type: "string",
-            description: "Unique key for the question",
-          },
-          answer_text: {
-            type: "string",
-            description: "The client's answer as text",
-          },
-        },
-        required: [
-          "session_id",
-          "section_number",
-          "section_name",
-          "question_key",
-          "answer_text",
-        ],
-      },
+interface SchemaProperty {
+  type: string;
+  description: string;
+  enum?: null;
+  is_system_provided?: boolean;
+  dynamic_variable?: string;
+  constant_value?: string;
+}
+
+interface ToolDefinition {
+  type: "webhook";
+  name: string;
+  description: string;
+  api_schema: {
+    url: string;
+    method: "POST";
+    request_headers: Record<string, string>;
+    request_body_schema: {
+      type: "object";
+      required: string[];
+      description: string;
+      properties: Record<string, SchemaProperty>;
+    };
+    content_type: "application/json";
+  };
+}
+
+const prop = (type: string, description: string): SchemaProperty => {
+  const base: SchemaProperty = {
+    type,
+    description,
+  };
+  if (type !== "object") {
+    base.enum = null;
+    base.is_system_provided = false;
+    base.dynamic_variable = "";
+    base.constant_value = "";
+  }
+  return base;
+};
+
+const makeTool = (
+  name: string,
+  description: string,
+  path: string,
+  properties: Record<string, SchemaProperty>,
+  required: string[],
+): ToolDefinition => ({
+  type: "webhook",
+  name,
+  description,
+  api_schema: {
+    url: `${BASE_URL}/api/agent/${path}`,
+    method: "POST",
+    request_headers: {
+      "x-webhook-secret": WEBHOOK_SECRET,
     },
-  },
-  {
-    type: "webhook" as const,
-    name: "update_progress",
-    description: "Call this when moving to the next questionnaire section.",
-    webhook: {
-      url: `${BASE_URL}/api/agent/update-progress`,
-      method: "POST" as const,
-      request_headers: {
-        "x-webhook-secret": WEBHOOK_SECRET,
-        "Content-Type": "application/json",
-      },
-      request_body: {
-        type: "object" as const,
-        properties: {
-          session_id: {
-            type: "string",
-            description: "The session ID",
-          },
-          section_number: {
-            type: "number",
-            description: "New section number 1-14",
-          },
-          section_name: {
-            type: "string",
-            description: "Greek name of the new section",
-          },
-        },
-        required: ["session_id", "section_number", "section_name"],
-      },
+    request_body_schema: {
+      type: "object",
+      required,
+      description: "",
+      properties,
     },
+    content_type: "application/json",
   },
-  {
-    type: "webhook" as const,
-    name: "log_feature_request",
-    description:
-      "Call this when the client asks if something can be done or requests a feature.",
-    webhook: {
-      url: `${BASE_URL}/api/agent/log-feature-request`,
-      method: "POST" as const,
-      request_headers: {
-        "x-webhook-secret": WEBHOOK_SECRET,
-        "Content-Type": "application/json",
-      },
-      request_body: {
-        type: "object" as const,
-        properties: {
-          session_id: {
-            type: "string",
-            description: "The session ID",
-          },
-          description: {
-            type: "string",
-            description: "Description of the feature request",
-          },
-          context: {
-            type: "string",
-            description: "What the client said exactly",
-          },
-        },
-        required: ["session_id", "description"],
-      },
+});
+
+const tools: ToolDefinition[] = [
+  makeTool(
+    "save_answer",
+    "Call this EVERY TIME the client answers a question. Saves the answer to the database.",
+    "save-answer",
+    {
+      conversation_id: prop("string", "Conversation ID from dynamic variables"),
+      section_number: prop("number", "Section number 1-14"),
+      section_name: prop("string", "Greek name of the section"),
+      question_key: prop("string", "Unique key for the question"),
+      answer_text: prop("string", "The client's answer as text"),
     },
-  },
-  {
-    type: "webhook" as const,
-    name: "log_issue",
-    description: "Call this when the client reports a problem or bug.",
-    webhook: {
-      url: `${BASE_URL}/api/agent/log-issue`,
-      method: "POST" as const,
-      request_headers: {
-        "x-webhook-secret": WEBHOOK_SECRET,
-        "Content-Type": "application/json",
-      },
-      request_body: {
-        type: "object" as const,
-        properties: {
-          session_id: {
-            type: "string",
-            description: "The session ID",
-          },
-          description: {
-            type: "string",
-            description: "Description of the issue",
-          },
-          context: {
-            type: "string",
-            description: "What the client said exactly",
-          },
-        },
-        required: ["session_id", "description"],
-      },
+    [
+      "conversation_id",
+      "section_number",
+      "section_name",
+      "question_key",
+      "answer_text",
+    ],
+  ),
+  makeTool(
+    "update_progress",
+    "Call this when moving to the next questionnaire section.",
+    "update-progress",
+    {
+      conversation_id: prop("string", "The Conversation ID"),
+      section_number: prop("number", "New section number 1-14"),
+      section_name: prop("string", "Greek name of the new section"),
     },
-  },
-  {
-    type: "webhook" as const,
-    name: "log_unanswered",
-    description: "Call this when you cannot answer a client's question.",
-    webhook: {
-      url: `${BASE_URL}/api/agent/log-unanswered`,
-      method: "POST" as const,
-      request_headers: {
-        "x-webhook-secret": WEBHOOK_SECRET,
-        "Content-Type": "application/json",
-      },
-      request_body: {
-        type: "object" as const,
-        properties: {
-          session_id: {
-            type: "string",
-            description: "The session ID",
-          },
-          question: {
-            type: "string",
-            description: "The question you couldn't answer",
-          },
-          context: {
-            type: "string",
-            description: "Context of the conversation",
-          },
-        },
-        required: ["session_id", "question"],
-      },
+    ["conversation_id", "section_number", "section_name"],
+  ),
+  makeTool(
+    "log_feature_request",
+    "Call this when the client asks if something can be done or requests a feature.",
+    "log-feature-request",
+    {
+      conversation_id: prop("string", "The Conversation ID"),
+      description: prop("string", "Description of the feature request"),
+      context: prop("string", "What the client said exactly"),
     },
-  },
-  {
-    type: "webhook" as const,
-    name: "pause_session",
-    description: "Call this when the client wants to stop and continue later.",
-    webhook: {
-      url: `${BASE_URL}/api/agent/pause-session`,
-      method: "POST" as const,
-      request_headers: {
-        "x-webhook-secret": WEBHOOK_SECRET,
-        "Content-Type": "application/json",
-      },
-      request_body: {
-        type: "object" as const,
-        properties: {
-          session_id: {
-            type: "string",
-            description: "The session ID",
-          },
-          context_snapshot: {
-            type: "object",
-            description:
-              "Snapshot with last_section (number), key_facts (array of strings), completed_sections (array of numbers), transcript_summary (string)",
-          },
-        },
-        required: ["session_id", "context_snapshot"],
-      },
+    ["conversation_id", "description"],
+  ),
+  makeTool(
+    "log_issue",
+    "Call this when the client reports a problem or bug.",
+    "log-issue",
+    {
+      conversation_id: prop("string", "The Conversation ID"),
+      description: prop("string", "Description of the issue"),
+      context: prop("string", "What the client said exactly"),
     },
-  },
+    ["conversation_id", "description"],
+  ),
+  makeTool(
+    "log_unanswered",
+    "Call this when you cannot answer a client's question.",
+    "log-unanswered",
+    {
+      conversation_id: prop("string", "The Conversation ID"),
+      question: prop("string", "The question you couldn't answer"),
+      context: prop("string", "Context of the conversation"),
+    },
+    ["conversation_id", "question"],
+  ),
+  makeTool(
+    "pause_session",
+    "Call this when the client wants to stop and continue later.",
+    "pause-session",
+    {
+      conversation_id: prop("string", "The Conversation ID"),
+      context_snapshot: prop(
+        "object",
+        "Snapshot with last_section (number), key_facts (array of strings), completed_sections (array of numbers), transcript_summary (string)",
+      ),
+    },
+    ["conversation_id", "context_snapshot"],
+  ),
 ];
 
-async function setupTools() {
+async function setupTools(): Promise<void> {
   console.log("Configuring all 6 server tools on Moto Assistant agent...\n");
 
   const response = await fetch(

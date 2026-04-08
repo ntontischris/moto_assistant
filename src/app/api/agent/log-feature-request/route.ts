@@ -11,11 +11,14 @@ export async function POST(request: Request) {
 
   try {
     const body: LogFeatureRequestPayload = await request.json();
+    const conversationId = body.conversation_id ?? body.session_id;
     const supabase = createAdminClient();
 
-    const { error } = await supabase
-      .from("assistant_feature_requests")
-      .insert(body);
+    const { error } = await supabase.from("assistant_feature_requests").insert({
+      session_id: conversationId,
+      description: body.description,
+      ...(body.context ? { context: body.context } : {}),
+    });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

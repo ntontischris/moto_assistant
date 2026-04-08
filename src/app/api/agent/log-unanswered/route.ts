@@ -11,9 +11,14 @@ export async function POST(request: Request) {
 
   try {
     const body: LogUnansweredPayload = await request.json();
+    const conversationId = body.conversation_id ?? body.session_id;
     const supabase = createAdminClient();
 
-    const { error } = await supabase.from("assistant_unanswered").insert(body);
+    const { error } = await supabase.from("assistant_unanswered").insert({
+      session_id: conversationId,
+      question: body.question,
+      ...(body.context ? { context: body.context } : {}),
+    });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

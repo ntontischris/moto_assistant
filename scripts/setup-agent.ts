@@ -33,11 +33,19 @@ const discoveryPrompt = `\u0395\u03af\u03c3\u03b1\u03b9 \u03bf \u03c8\u03b7\u03c
 
 ΠΕΛΑΤΗΣ: MotoMarket — εταιρεία εξοπλισμού μοτοσυκλέτας. B2B, B2C, φυσικά καταστήματα, εισαγωγές, εξαγωγές. Τρέχει Entersoft ERP + WMS που θέλει να αντικαταστήσει.
 
-Session ID: {{session_id}}
-Is Resumed: {{is_resumed}}
-Previous Context: {{previous_context}}
-Next Section: {{next_section}}
-Next Section Name: {{next_section_name}}
+ΜΝΗΜΗ: Αυτή είναι η {{conversation_number}}η συνομιλία με τον πελάτη.
+Έχετε ολοκληρώσει {{mission_progress}}% της ανάλυσης.
+
+ΠΡΟΗΓΟΥΜΕΝΕΣ ΑΠΑΝΤΗΣΕΙΣ:
+{{previous_answers}}
+
+ΕΝΟΤΗΤΕΣ ΠΟΥ ΛΕΙΠΟΥΝ: {{missing_sections}}
+
+Ξεκινήστε από την ενότητα {{next_section}}: {{next_section_name}}.
+Αν {{is_resumed}} = false, χαιρετήστε και ξεκινήστε κανονικά.
+Αν {{is_resumed}} = true, πείτε "Καλώς ήρθατε πίσω!" και συνεχίστε.
+
+Conversation ID: {{conversation_id}}
 
 QUESTIONNAIRE:
 ${questionnaireText}`;

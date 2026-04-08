@@ -1,8 +1,8 @@
-import type { AssistantSession } from "@/types/database";
+import type { AssistantConversation } from "@/types/database";
 import Link from "next/link";
 
 interface SessionsTableProps {
-  sessions: AssistantSession[];
+  conversations: AssistantConversation[];
 }
 
 const STATUS_STYLES: Record<
@@ -18,11 +18,6 @@ const STATUS_STYLES: Record<
   },
 };
 
-const MODE_LABELS: Record<string, string> = {
-  discovery: "Discovery",
-  support: "Support",
-};
-
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString("el-GR", {
     day: "2-digit",
@@ -31,13 +26,19 @@ function formatDate(dateString: string): string {
   });
 }
 
-function formatProgress(session: AssistantSession): string {
-  if (session.mode === "support") return "—";
-  return `${session.progress_section}/${session.progress_total}`;
+function formatDuration(seconds: number | null): string {
+  if (seconds === null || seconds === 0) return "—";
+  const minutes = Math.round(seconds / 60);
+  return `${minutes}m`;
 }
 
-export function SessionsTable({ sessions }: SessionsTableProps) {
-  if (sessions.length === 0) {
+function formatSectionsCovered(sections: number[]): string {
+  if (!sections || sections.length === 0) return "—";
+  return sections.join(", ");
+}
+
+export function SessionsTable({ conversations }: SessionsTableProps) {
+  if (conversations.length === 0) {
     return (
       <div
         className="rounded-xl border px-6 py-12 text-center"
@@ -47,7 +48,7 @@ export function SessionsTable({ sessions }: SessionsTableProps) {
           color: "var(--gray-500)",
         }}
       >
-        Δεν υπάρχουν sessions ακόμα
+        Δεν υπάρχουν συνομιλίες ακόμα
       </div>
     );
   }
@@ -63,7 +64,13 @@ export function SessionsTable({ sessions }: SessionsTableProps) {
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b" style={{ borderColor: "var(--gray-700)" }}>
-            {["Πελάτης", "Mode", "Status", "Πρόοδος", "Ημ/νία"].map((h) => (
+            {[
+              "Status",
+              "Τελευταίο Section",
+              "Sections",
+              "Διάρκεια",
+              "Ημ/νία",
+            ].map((h) => (
               <th
                 key={h}
                 className="px-5 py-3 text-xs font-semibold uppercase tracking-wider"
@@ -75,43 +82,42 @@ export function SessionsTable({ sessions }: SessionsTableProps) {
           </tr>
         </thead>
         <tbody>
-          {sessions.map((session) => {
+          {conversations.map((conversation) => {
             const status =
-              STATUS_STYLES[session.status] ?? STATUS_STYLES.active;
+              STATUS_STYLES[conversation.status] ?? STATUS_STYLES.active;
             return (
               <tr
-                key={session.id}
+                key={conversation.id}
                 className="border-b last:border-b-0 transition-colors"
                 style={{ borderColor: "var(--gray-700)" }}
               >
                 <td className="px-5 py-3">
                   <Link
-                    href={`/dashboard/sessions/${session.id}`}
-                    className="font-medium hover:underline"
-                    style={{ color: "var(--gray-100)" }}
+                    href={`/dashboard/conversations/${conversation.id}`}
+                    className="hover:underline"
                   >
-                    {session.client_name ?? "Ανώνυμος"}
+                    <span
+                      className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: status.bg,
+                        color: status.text,
+                      }}
+                    >
+                      {status.label}
+                    </span>
                   </Link>
                 </td>
                 <td className="px-5 py-3" style={{ color: "var(--gray-300)" }}>
-                  {MODE_LABELS[session.mode] ?? session.mode}
-                </td>
-                <td className="px-5 py-3">
-                  <span
-                    className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
-                    style={{
-                      backgroundColor: status.bg,
-                      color: status.text,
-                    }}
-                  >
-                    {status.label}
-                  </span>
+                  {conversation.last_section}
                 </td>
                 <td className="px-5 py-3" style={{ color: "var(--gray-300)" }}>
-                  {formatProgress(session)}
+                  {formatSectionsCovered(conversation.sections_covered)}
+                </td>
+                <td className="px-5 py-3" style={{ color: "var(--gray-300)" }}>
+                  {formatDuration(conversation.duration_seconds)}
                 </td>
                 <td className="px-5 py-3" style={{ color: "var(--gray-500)" }}>
-                  {formatDate(session.created_at)}
+                  {formatDate(conversation.created_at)}
                 </td>
               </tr>
             );

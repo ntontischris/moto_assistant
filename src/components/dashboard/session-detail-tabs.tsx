@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type {
-  AssistantSession,
+  AssistantConversation,
   AssistantAnswer,
   AssistantTranscript,
   AssistantFeatureRequest,
@@ -15,7 +15,7 @@ import { TabFeatureRequests } from "@/components/dashboard/tab-feature-requests"
 import { TabIssues } from "@/components/dashboard/tab-issues";
 
 interface SessionDetailTabsProps {
-  session: AssistantSession;
+  conversation: AssistantConversation;
   answers: AssistantAnswer[];
   transcript: AssistantTranscript | null;
   featureRequests: AssistantFeatureRequest[];
@@ -31,7 +31,7 @@ interface TabConfig {
 }
 
 export function SessionDetailTabs({
-  session,
+  conversation,
   answers,
   transcript,
   featureRequests,
@@ -40,11 +40,7 @@ export function SessionDetailTabs({
   const tabs: TabConfig[] = [
     { key: "summary", label: "Σύνοψη", isVisible: true },
     { key: "transcript", label: "Μεταγραφή", isVisible: true },
-    {
-      key: "answers",
-      label: "Απαντήσεις",
-      isVisible: session.mode === "discovery",
-    },
+    { key: "answers", label: "Απαντήσεις", isVisible: true },
     { key: "features", label: "Feature Requests", isVisible: true },
     { key: "issues", label: "Issues", isVisible: true },
   ];
@@ -90,7 +86,7 @@ export function SessionDetailTabs({
           <TabSummary
             transcript={transcript}
             answers={answers}
-            totalSections={session.progress_total}
+            totalSections={14}
           />
         )}
         {activeTab === "transcript" && (

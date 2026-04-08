@@ -4,7 +4,7 @@ import {
   QUESTIONNAIRE_SECTIONS,
   type QuestionnaireSection,
 } from "@/lib/constants/questionnaire";
-import type { SessionMode } from "@/types/database";
+type SessionMode = "discovery" | "support";
 
 function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

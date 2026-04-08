@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Sessions", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Συνομιλίες", icon: LayoutDashboard },
   { href: "/dashboard/knowledge", label: "Knowledge Base", icon: BookOpen },
   { href: "/dashboard/unanswered", label: "Αναπάντητες", icon: HelpCircle },
 ] as const;

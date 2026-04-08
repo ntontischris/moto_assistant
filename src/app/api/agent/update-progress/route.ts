@@ -11,12 +11,13 @@ export async function POST(request: Request) {
 
   try {
     const body: UpdateProgressPayload = await request.json();
+    const conversationId = body.conversation_id ?? body.session_id;
     const supabase = createAdminClient();
 
     const { error } = await supabase
       .from("assistant_sessions")
       .update({ progress_section: body.section_number })
-      .eq("id", body.session_id);
+      .eq("id", conversationId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

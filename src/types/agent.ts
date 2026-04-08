@@ -3,7 +3,8 @@
 // =============================================================================
 
 export interface SaveAnswerPayload {
-  session_id: string;
+  conversation_id?: string;
+  session_id?: string;
   section_number: number;
   section_name: string;
   question_key: string;
@@ -12,25 +13,29 @@ export interface SaveAnswerPayload {
 }
 
 export interface UpdateProgressPayload {
-  session_id: string;
+  conversation_id?: string;
+  session_id?: string;
   section_number: number;
   section_name: string;
 }
 
 export interface LogFeatureRequestPayload {
-  session_id: string;
+  conversation_id?: string;
+  session_id?: string;
   description: string;
   context?: string;
 }
 
 export interface LogIssuePayload {
-  session_id: string;
+  conversation_id?: string;
+  session_id?: string;
   description: string;
   context?: string;
 }
 
 export interface LogUnansweredPayload {
-  session_id: string;
+  conversation_id?: string;
+  session_id?: string;
   question: string;
   context?: string;
 }
@@ -43,6 +48,7 @@ export interface ContextSnapshot {
 }
 
 export interface PauseSessionPayload {
-  session_id: string;
+  conversation_id?: string;
+  session_id?: string;
   context_snapshot: ContextSnapshot;
 }

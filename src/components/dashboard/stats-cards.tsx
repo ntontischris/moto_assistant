@@ -1,10 +1,19 @@
-import { AlertCircle, HelpCircle, MessageSquare, Radio } from "lucide-react";
+import {
+  AlertCircle,
+  HelpCircle,
+  MessageSquare,
+  Radio,
+  Target,
+} from "lucide-react";
+import type { MissionStatus } from "@/types/database";
 
 interface StatsCardsProps {
   totalSessions: number;
   openFeatureRequests: number;
   unansweredQuestions: number;
   activeSessions: number;
+  missionProgress: number | null;
+  missionStatus: MissionStatus | null;
 }
 
 const STATS_CONFIG = [
