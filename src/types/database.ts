@@ -4,8 +4,8 @@
 
 // -- Enums as union types -------------------------------------------------- //
 
-export type SessionMode = "discovery" | "support";
-export type SessionStatus = "active" | "paused" | "completed";
+export type MissionStatus = "in_progress" | "completed";
+export type ConversationStatus = "active" | "paused" | "completed";
 export type Confidence = "high" | "medium" | "low";
 export type FeatureRequestPriority = "low" | "medium" | "high";
 export type FeatureRequestStatus =
@@ -28,25 +28,32 @@ export type UnansweredStatus = "unanswered" | "answered";
 
 // -- Row interfaces -------------------------------------------------------- //
 
-export interface AssistantSession {
+export interface AssistantMission {
   id: string;
-  client_name: string | null;
-  client_email: string | null;
-  client_company: string | null;
-  mode: SessionMode;
-  status: SessionStatus;
-  progress_section: number;
-  progress_total: number;
+  status: MissionStatus;
+  progress_percentage: number;
+  total_answers: number;
+  total_conversations: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssistantConversation {
+  id: string;
+  mission_id: string | null;
+  status: ConversationStatus;
+  last_section: number;
   elevenlabs_conversation_id: string | null;
-  resume_token: string;
   context_snapshot: Record<string, unknown> | null;
+  duration_seconds: number | null;
+  sections_covered: number[];
   created_at: string;
   updated_at: string;
 }
 
 export interface AssistantAnswer {
   id: string;
-  session_id: string;
+  session_id: string; // still called session_id in DB FK
   section_number: number;
   section_name: string;
   question_key: string;
@@ -111,60 +118,24 @@ export interface AssistantUnanswered {
   created_at: string;
 }
 
-// -- Insert helpers (omit server-generated fields) ------------------------- //
+// -- Computed types -------------------------------------------------------- //
 
-export type AssistantSessionInsert = Omit<
-  AssistantSession,
-  "id" | "resume_token" | "created_at" | "updated_at"
-> & {
-  id?: string;
-  resume_token?: string;
-  created_at?: string;
-  updated_at?: string;
-};
+export type SectionStatus = "not_started" | "partial" | "complete";
 
-export type AssistantAnswerInsert = Omit<
-  AssistantAnswer,
-  "id" | "created_at"
-> & {
-  id?: string;
-  created_at?: string;
-};
+export interface SectionProgress {
+  number: number;
+  name: string;
+  status: SectionStatus;
+  answeredCount: number;
+  totalQuestions: number;
+}
 
-export type AssistantTranscriptInsert = Omit<
-  AssistantTranscript,
-  "id" | "created_at"
-> & {
-  id?: string;
-  created_at?: string;
-};
-
-export type AssistantFeatureRequestInsert = Omit<
-  AssistantFeatureRequest,
-  "id" | "created_at"
-> & {
-  id?: string;
-  created_at?: string;
-};
-
-export type AssistantIssueInsert = Omit<AssistantIssue, "id" | "created_at"> & {
-  id?: string;
-  created_at?: string;
-};
-
-export type AssistantKnowledgeInsert = Omit<
-  AssistantKnowledge,
-  "id" | "created_at" | "updated_at"
-> & {
-  id?: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type AssistantUnansweredInsert = Omit<
-  AssistantUnanswered,
-  "id" | "created_at"
-> & {
-  id?: string;
-  created_at?: string;
-};
+export interface MissionState {
+  mission: AssistantMission;
+  sections: SectionProgress[];
+  nextSection: { number: number; name: string } | null;
+  recentAnswers: AssistantAnswer[];
+  conversations: AssistantConversation[];
+  allAnswersSummary: string;
+  missingSectionNumbers: number[];
+}
