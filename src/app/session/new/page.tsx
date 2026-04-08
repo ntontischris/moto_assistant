@@ -17,8 +17,8 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     mode === "discovery" ? "Ανάλυση Απαιτήσεων" : "Υποστήριξη & Ερωτήσεις";
   const subtitle =
     mode === "discovery"
-      ? "Συμπληρώστε τα στοιχεία σας για να ξεκινήσουμε το interview"
-      : "Συμπληρώστε τα στοιχεία σας για να σας βοηθήσουμε";
+      ? "Πριν ξεκινήσουμε, ελέγξτε το μικρόφωνό σας"
+      : "Πριν ξεκινήσουμε, ελέγξτε το μικρόφωνό σας";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4">

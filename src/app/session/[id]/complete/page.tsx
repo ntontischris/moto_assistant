@@ -29,37 +29,43 @@ export default async function CompletePage({ params }: PageProps) {
       <CheckCircle size={64} className="mb-6 text-green-400" />
 
       <h1 className="mb-2 text-3xl font-bold text-[var(--gray-100)]">
-        Thank you!
+        Ευχαριστούμε!
       </h1>
 
       {isCompleted && (
-        <p className="mb-4 text-[var(--gray-300)]">The analysis is complete.</p>
+        <p className="mb-4 text-[var(--gray-300)]">
+          Η ανάλυση απαιτήσεων ολοκληρώθηκε. Η ομάδα μας θα επεξεργαστεί τις
+          απαντήσεις σας και θα επικοινωνήσουμε σύντομα.
+        </p>
       )}
 
       {isPaused && (
         <div className="mb-4 flex flex-col items-center gap-3">
           <p className="text-[var(--gray-300)]">
-            You completed {session.progress_section}/{TOTAL_SECTIONS} sections.
+            Ολοκληρώσατε {session.progress_section}/{TOTAL_SECTIONS} ενότητες.
+            Μπορείτε να συνεχίσετε οποτεδήποτε.
           </p>
           <Link
             href={`/resume/${session.resume_token}`}
             className="rounded-lg px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: "var(--red)" }}
           >
-            Resume Session
+            Συνεχίστε αργότερα
           </Link>
         </div>
       )}
 
-      <p className="mb-8 text-sm text-[var(--gray-500)]">
-        You will receive an email with the summary.
-      </p>
+      {!isCompleted && !isPaused && (
+        <p className="mb-4 text-[var(--gray-300)]">
+          Η συνομιλία ολοκληρώθηκε. Σας ευχαριστούμε για τον χρόνο σας.
+        </p>
+      )}
 
       <Link
         href="/"
-        className="text-sm text-[var(--gray-400)] underline underline-offset-4 transition-colors hover:text-[var(--gray-200)]"
+        className="mt-4 text-sm text-[var(--gray-400)] underline underline-offset-4 transition-colors hover:text-[var(--gray-200)]"
       >
-        Back to Home
+        ← Αρχική
       </Link>
     </div>
   );
