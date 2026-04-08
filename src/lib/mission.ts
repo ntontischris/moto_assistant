@@ -10,23 +10,26 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function getMissionState(
   supabase: SupabaseClient,
 ): Promise<MissionState | null> {
-  const { data: mission } = await supabase
-    .from("assistant_mission")
-    .select("*")
-    .single();
+  // Parallel queries for speed
+  const [missionRes, answersRes, conversationsRes] = await Promise.all([
+    supabase.from("assistant_mission").select("*").single(),
+    supabase
+      .from("assistant_answers")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("assistant_conversations")
+      .select("*")
+      .order("created_at", { ascending: false }),
+  ]);
 
+  const mission = missionRes.data;
   if (!mission) return null;
 
-  const { data: answers } = await supabase
-    .from("assistant_answers")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  const { data: conversations } = await supabase
-    .from("assistant_conversations")
-    .select("*")
-    .eq("mission_id", mission.id)
-    .order("created_at", { ascending: false });
+  const answers = answersRes.data;
+  const conversations = (conversationsRes.data ?? []).filter(
+    (c: { mission_id: string | null }) => c.mission_id === mission.id,
+  );
 
   const allAnswers = answers ?? [];
   const answersBySection = new Map<number, AssistantAnswer[]>();
